@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Salud Inteligente</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+
+<body>
+
+<div class="layout">
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+    <h2>🩺 Salud</h2>
+    <ul>
+        <li>Inicio</li>
+        <li>Evaluación</li>
+    </ul>
+</aside>
+
+<!-- MAIN -->
+<main class="main">
+
+<header class="topbar">
+    <div>
+        <h1>Hola 👋</h1>
+        <p id="fecha"></p>
+    </div>
+</header>
+
+<!-- FORM -->
+<div class="card form-card anim">
+
+<h3>👤 Datos del paciente</h3>
+
+<div class="input-group">
+    <input type="text" id="nombre" required>
+    <label>Nombre completo</label>
+</div>
+
+<div class="input-group">
+    <input type="number" id="edad" required>
+    <label>Edad</label>
+</div>
+
+<div class="presion-input">
+    <div class="input-group">
+        <input type="number" id="sistolica" required>
+        <label>Sistólica</label>
+    </div>
+
+    <div class="input-group">
+        <input type="number" id="diastolica" required>
+        <label>Diastólica</label>
+    </div>
+</div>
+
+</div>
+
+<!-- DASHBOARD -->
+<section class="dashboard">
+
+<div class="card grande presion-card">
+    <h3>❤️ Presión arterial</h3>
+    <div class="valor" id="presion">--/--</div>
+    <p id="estadoPresion" class="estado">Sin datos</p>
+</div>
+
+<div class="card resultado-card">
+    <h3>🧠 Resultado</h3>
+    <div id="resultado">Esperando evaluación...</div>
+</div>
+
+</section>
+
+<!-- SÍNTOMAS -->
+<h2>🩺 Selecciona síntomas</h2>
+
+<form id="formulario" class="grid">
+
+{% for s in sintomas %}
+<label class="card-s">
+<input type="checkbox" value="{{ s }}">
+<div>
+
+<img src="{{ url_for('static', filename='imagenes/' + s + '.png') }}"
+class="img"
+onerror="this.src='/static/imagenes/default.png'">
+
+<p>{{ s.replace("_"," ").capitalize() }}</p>
+
+</div>
+</label>
+{% endfor %}
+
+</form>
+
+<button class="btn" onclick="evaluarTodo()">🔍 Evaluar</button>
+
+</main>
+
+</div>
+
+<script>
+
+// FECHA
+document.getElementById("fecha").innerText =
+new Date().toLocaleDateString("es-MX",{weekday:"long",day:"numeric",month:"long"});
+
+// FUNCIÓN
+async function evaluarTodo(){
+
+let nombre = document.getElementById("nombre").value;
+let edad = document.getElementById("edad").value;
+let s = parseInt(document.getElementById("sistolica").value);
+let d = parseInt(document.getElementById("diastolica").value);
+
+let sintomas = [];
+document.querySelectorAll("input:checked").forEach(el=>{
+    sintomas.push(el.value);
+});
+
+// VALIDACIÓN
+if(nombre === "" || edad === "" || isNaN(s) || isNaN(d)){
+    alert("Completa todos los campos");
+    return;
+}
+
+// PRESIÓN
+document.getElementById("presion").innerText = s + "/" + d;
+
+// CLASIFICACIÓN
+let estado = "Normal";
+let clase = "bajo";
+
+if(s >= 140 || d >= 90){
+    estado = "Alta";
+    clase = "alto";
+} else if(s >= 130){
+    estado = "Elevada";
+    clase = "medio";
+}
+
+document.getElementById("estadoPresion").innerText = estado;
+document.getElementById("estadoPresion").className = "estado " + clase;
+
+// GUARDAR
+await fetch("/guardar_paciente", {
+method:"POST",
+headers:{"Content-Type":"application/json"},
+body:JSON.stringify({nombre, edad, sistolica:s, diastolica:d})
+});
+
+// SISTEMA EXPERTO
+let res = await fetch("/evaluar", {
+method:"POST",
+headers:{"Content-Type":"application/json"},
+body:JSON.stringify({sintomas})
+});
+
+let data = await res.json();
+
+// RESULTADO BONITO
+document.getElementById("resultado").innerHTML =
+`<div class="badge ${data.riesgo.toLowerCase()}">${data.riesgo}</div>
+<p>${data.mensajes}</p>
+<p>${data.recomendacion}</p>`;
+
+// VOZ
+let texto = `${nombre}, ${edad} años. Presión ${estado}. Riesgo ${data.riesgo}. ${data.mensajes}. ${data.recomendacion}`;
+
+let voz = new SpeechSynthesisUtterance(texto);
+voz.lang = "es-MX";
+speechSynthesis.speak(voz);
+}
+
+</script>
+
+</body>
+</html>
