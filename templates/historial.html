@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <title>Salud Inteligente</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+
+    <link
+      href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='style.css') }}"
+    />
+  </head>
+  <body>
+    <div class="layout">
+      <aside class="sidebar">
+        <h2>🩺 Salud Inteligente</h2>
+
+        <ul class="menu">
+          <li><a href="/">🏠 Inicio</a></li>
+          <li><a href="/pacientes">👤 Pacientes</a></li>
+          <li><a href="/historial">📜 Historial</a></li>
+          <li><a href="/consultas">🚨 Consultas</a></li>
+        </ul>
+      </aside>
+
+      <main class="main">
+        <h1 class="section-title">📜 Historial médico</h1>
+
+        <div class="tabla-container">
+          <table>
+            <tr>
+              <th>Síntomas</th>
+              <th>Resultado</th>
+              <th>Fecha</th>
+            </tr>
+
+            {% for h in historial %}
+
+            <tr>
+              <td>{{ h[0] }}</td>
+
+              <td>{{ h[1] }}</td>
+
+              <td>{{ h[2] }}</td>
+            </tr>
+
+            {% endfor %}
+          </table>
+        </div>
+      </main>
+    </div>
+  </body>
+</html>
